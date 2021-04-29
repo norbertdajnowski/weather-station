@@ -3,6 +3,9 @@
 #include <MQUnifiedsensor.h>
 #include "SparkFunMPL3115A2.h"
 #include "SparkFun_Si7021_Breakout_Library.h" 
+#include <lmic.h>
+#include <hal/hal.h>
+#include <SPI.h>
 
 #define placa "Arduino UNO"
 #define Voltage_Resolution 5
@@ -13,6 +16,31 @@
 
 MPL3115A2 myPressure; 
 Weather myHumidity;
+
+//TTN Connection Setup
+static const PROGMEM u1_t NWKSKEY[16] = { 0xA4, 0xAE, 0x4E, 0xFE, 0x74, 0x19, 0xFC, 0xAC, 0x27, 0x73, 0xAF, 0x86, 0xD1, 0x5F, 0x24, 0x26 };
+
+// LoRaWAN AppSKey, application session key
+static const u1_t PROGMEM APPSKEY[16] = { 0x55, 0x94, 0xE2, 0x5A, 0x3C, 0xE6, 0xFA, 0x6D, 0xC0, 0x48, 0x29, 0xF9, 0x9B, 0xA8, 0xE4, 0x0C };
+
+// LoRaWAN end-device address (DevAddr)
+static const u4_t DEVADDR = 0x26011914;
+
+void os_getArtEui (u1_t* buf) { }
+void os_getDevEui (u1_t* buf) { }
+void os_getDevKey (u1_t* buf) { }
+
+//TX Schedule
+const unsigned TX_INTERVAL = 60;
+
+// Pin mapping
+const lmic_pinmap lmic_pins = {
+    .nss = 10,
+    .rxtx = LMIC_UNUSED_PIN,
+    .rst = 9,
+    .dio = {2, 6, 7},
+};
+
 
 //Static Variables (I/O Pins)
 const byte STAT_BLUE = 7;
@@ -137,7 +165,7 @@ void setup()
   pinMode(ledWarning,OUTPUT);
   pinMode(WSPEED, INPUT_PULLUP);
   pinMode(RAIN, INPUT_PULLUP);
-  
+
   MQ135.setRegressionMethod(1);
   MQ135.init(); 
   
