@@ -18,34 +18,23 @@ MPL3115A2 myPressure;
 Weather myHumidity;
 
 // LoRaWAN NwkSKey, network session key
-// This is the default Semtech key, which is used by the early prototype TTN
-// network.
 static const PROGMEM u1_t NWKSKEY[16] = { 0xA4, 0xAE, 0x4E, 0xFE, 0x74, 0x19, 0xFC, 0xAC, 0x27, 0x73, 0xAF, 0x86, 0xD1, 0x5F, 0x24, 0x26 };
 
 // LoRaWAN AppSKey, application session key
-// This is the default Semtech key, which is used by the early prototype TTN
-// network.
 static const u1_t PROGMEM APPSKEY[16] = { 0x55, 0x94, 0xE2, 0x5A, 0x3C, 0xE6, 0xFA, 0x6D, 0xC0, 0x48, 0x29, 0xF9, 0x9B, 0xA8, 0xE4, 0x0C };
 
 // LoRaWAN end-device address (DevAddr)
 static const u4_t DEVADDR = 0x26011914; // <-- Change this address for every node!
 
-// These callbacks are only used in over-the-air activation, so they are
-// left empty here (we cannot leave them out completely unless
-// DISABLE_JOIN is set in config.h, otherwise the linker will complain).
 void os_getArtEui (u1_t* buf) { }
 void os_getDevEui (u1_t* buf) { }
 void os_getDevKey (u1_t* buf) { }
 
-int field1 = 5;
-int field2 = 3;
-int field3 = 2;
-static uint8_t mydata[] = {field1, field2, field3};  //the decoder will treat each list index as another entry in thingspeak
+static uint8_t mydata[9]; 
 static osjob_t sendjob;
 
-// Schedule TX every this many seconds (might become longer due to duty
-// cycle limitations).
-const unsigned TX_INTERVAL = 60;
+// Schedule TX every this many seconds
+const unsigned TX_INTERVAL = 30;
 
 // Pin mapping
 const lmic_pinmap lmic_pins = {
@@ -56,7 +45,6 @@ const lmic_pinmap lmic_pins = {
 };
 
 //Weather Shield Variables
-//Static Variables (I/O Pins)
 const byte STAT_BLUE = 7;
 const byte STAT_GREEN = 8;
 const byte REFERENCE_3V3 = A3;
@@ -68,18 +56,17 @@ const byte WDIR = A0;
 MQUnifiedsensor MQ135(placa, Voltage_Resolution, ADC_Bit_Resolution, pin, type);
 long lastSecond; 
 
-byte minutes; //Keeps track of where we are in various arrays of data
+byte minutes;
 byte seconds;
 long lastWindCheck = 0;
 volatile long lastWindIRQ = 0;
 volatile byte windClicks = 0;
-volatile float rainHour[60]; //60 floating numbers to keep track of 60 minutes of rain
+volatile float rainHour[60]; 
 
-//These are all the weather values that wunderground expects:
-int winddir = 0; // [0-360 instantaneous wind direction]
-float windspeedmph = 0; // [mph instantaneous wind speed]
-float rainin = 0; // [rain inches over the past hour)] -- the accumulated rainfall in the past 60 min
-volatile float dailyrainin = 0; // [rain inches so far today in local time]
+int winddir = 0;
+float windspeedmph = 0;
+float rainin = 0; 
+volatile float dailyrainin = 0; 
 
 // volatiles are subject to modification by IRQs
 volatile unsigned long raintime, rainlast, raininterval, rain;
@@ -149,6 +136,30 @@ void wspeedIRQ()
   }
 }
 
+void dataUpdate(){
+
+    float currentSpeed = get_wind_speed();
+    windspeedmph = currentSpeed;
+    int currentDirection = get_wind_direction();
+    winddir = get_wind_direction(); 
+    MQ135.update();   
+    float humidity = myHumidity.getRH();
+    float CO = get_CO();
+    float temp_h = (myHumidity.readTempF() - 32) * 5/9;
+    float pressure = myPressure.readPressure() / 1000;
+    float light_lvl = get_light_level() * 100;
+    float Alcohol = get_Alcohol();
+
+    mydata [0] = temp_h;
+    mydata [1] = humidity;
+    mydata [2] = pressure;
+    mydata [3] = CO;
+    mydata [4] = light_lvl;
+    mydata [5] = windspeedmph;
+    mydata [6] = winddir;
+    mydata [7] = rainin;
+}
+
 void onEvent (ev_t ev) {
     Serial.print(os_getTime());
     Serial.print(": ");
@@ -216,6 +227,7 @@ void onEvent (ev_t ev) {
 
 void do_send(osjob_t* j){
     // Check if there is not a current TX/RX job running
+    dataUpdate();
     if (LMIC.opmode & OP_TXRXPEND) {
         Serial.println(F("OP_TXRXPEND, not sending"));
     } else {
@@ -280,6 +292,37 @@ void setup() {
     LMIC_setSession (0x1, DEVADDR, NWKSKEY, APPSKEY);
     #endif
 
+    #if defined(CFG_eu868)
+    // Set up the channels used by the Things Network, which corresponds
+    // to the defaults of most gateways. Without this, only three base
+    // channels from the LoRaWAN specification are used, which certainly
+    // works, so it is good for debugging, but can overload those
+    // frequencies, so be sure to configure the full frequency range of
+    // your network here (unless your network autoconfigures them).
+    // Setting up channels should happen after LMIC_setSession, as that
+    // configures the minimal channel set.
+    // NA-US channels 0-71 are configured automatically
+    LMIC_setupChannel(0, 868100000, DR_RANGE_MAP(DR_SF12, DR_SF7),  BAND_CENTI);      // g-band
+    LMIC_setupChannel(1, 868300000, DR_RANGE_MAP(DR_SF12, DR_SF7B), BAND_CENTI);      // g-band
+    LMIC_setupChannel(2, 868500000, DR_RANGE_MAP(DR_SF12, DR_SF7),  BAND_CENTI);      // g-band
+    LMIC_setupChannel(3, 867100000, DR_RANGE_MAP(DR_SF12, DR_SF7),  BAND_CENTI);      // g-band
+    LMIC_setupChannel(4, 867300000, DR_RANGE_MAP(DR_SF12, DR_SF7),  BAND_CENTI);      // g-band
+    LMIC_setupChannel(5, 867500000, DR_RANGE_MAP(DR_SF12, DR_SF7),  BAND_CENTI);      // g-band
+    LMIC_setupChannel(6, 867700000, DR_RANGE_MAP(DR_SF12, DR_SF7),  BAND_CENTI);      // g-band
+    LMIC_setupChannel(7, 867900000, DR_RANGE_MAP(DR_SF12, DR_SF7),  BAND_CENTI);      // g-band
+    LMIC_setupChannel(8, 868800000, DR_RANGE_MAP(DR_FSK,  DR_FSK),  BAND_MILLI);      // g2-band
+    // TTN defines an additional channel at 869.525Mhz using SF9 for class B
+    // devices' ping slots. LMIC does not have an easy way to define set this
+    // frequency and support for class B is spotty and untested, so this
+    // frequency is not configured here.
+    #elif defined(CFG_us915)
+    // NA-US channels 0-71 are configured automatically
+    // but only one group of 8 should (a subband) should be active
+    // TTN recommends the second sub band, 1 in a zero based count.
+    // https://github.com/TheThingsNetwork/gateway-conf/blob/master/US-global_conf.json
+    LMIC_selectSubBand(1);
+    #endif
+    
     // Disable link check validation
     LMIC_setLinkCheckMode(0);
 
