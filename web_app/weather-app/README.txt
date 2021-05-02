@@ -1,0 +1,1 @@
+Weather station application built in flask, connecting to the thinspeak API for my LoRaWAN weather network and displaying data collected from different nodes.
