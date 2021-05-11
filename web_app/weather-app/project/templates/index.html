@@ -1,0 +1,74 @@
+{% extends "layout/layout.html" %}
+{% block body %}
+<!--Creates the popup body-->
+<div class="popup-overlay">
+    <!--Creates the popup content-->
+    <div class="popup-content">
+      <h1 style="margin-top: 25px; font-family: 'Roboto'; color:white;">Choose Weather Station</h1>
+      
+      <div class="cards-list">
+            <div class="card 1">
+                <div class="card_image" id="campus-station"> <img src="https://www.yorksj.ac.uk/media/content-assets/news-and-events/images/news/WEB-YSJ-Campus_060718_014.jpg" /> </div>
+                    <div class="card_title title-white">
+                        <p>YSJ Campus</p>
+                </div>
+            </div>
+            <div class="card 1">
+                <div class="card_image" id="sports-station"> <img src="https://www.yorkpress.co.uk/resources/images/3469274.jpg?display=1&htype=0&type=responsive-gallery" /> </div>
+                    <div class="card_title title-white">
+                        <p>Sports Field</p>
+                </div>
+            </div>
+
+        </div>
+       </div>
+       <!--popup's close button-->
+      <button class="location-button" id="close">Close</button>
+  </div>
+    
+<div class="container">
+    <div class="weather-side">
+        <div class="weather-gradient"></div>
+        <div class="date-container">
+            <h2 class="date-dayname"></h2><span class="date-day" id="date-time"></span></i><span class="location"></span>
+        </div>
+        <div class="weather-container"><i class="weather-icon" data-feather="sun"></i>
+            <h1 class="weather-temp" id="temperature">°C</h1>
+            <h3 class="weather-desc"></h3>
+        </div>
+    </div>
+    <div class="info-side">
+        <div class="today-info-container">
+            <div class="today-info">
+                <div class="humidity"> <span class="title">HUMIDITY</span><span class="value" id="humidity"> %</span>
+                    <div class="clear"></div>
+                </div>
+                <div class="precipitation"> <span class="title">PRESSURE</span><span class="value" id="pressure"> kP</span>
+                    <div class="clear"></div>
+                </div>
+                <div class="light"> <span class="title">LIGHT INTENSITY</span><span class="value" id="light"> V</span>
+                    <div class="clear"></div>
+                </div>
+                <div class="carbon-monoxide"> <span class="title">CARBON M</span><span class="value" id="carbonM"> PPM</span>
+                    <div class="clear"></div>
+                </div>
+                <div class="wind-speed"> <span class="title">WIND SPEED</span><span class="value" id="windS"> km/h</span>
+                    <div class="clear"></div>
+                </div>
+                <div class="wind-direction"> <span class="title">WIND DIRECTION</span><span class="value" id="windD"></span>
+                    <div class="clear"></div>
+                </div>
+                <div class="rain-rate"> <span class="title">RAIN</span><span class="value" id="rainR"> mm</span>
+                    <div class="clear"></div>
+                </div>
+            </div>
+        </div>
+        <div class="week-container">
+            <ul class="week-list">
+            </ul>
+        </div>
+        <div class="location-container"><button class="location-button" id="info-button" onclick="infoDisplay()"> <i data-feather="map-pin"></i><span>More Info</span></button></div>
+        <div class="location-container"><button class="location-button" id="open"> <i data-feather="map-pin"></i><span>Change location</span></button></div>
+    </div>
+</div>
+{% endblock %}
