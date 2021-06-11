@@ -1,0 +1,21 @@
+function Decoder(b, port) { 
+  var temp = b[0];
+  var humidity = b[1];
+  var pressure = b[2];
+  var co = b[3];
+  var light = b[4];
+  var windS = b[5];
+  var windD = b[6];
+  var rainR = b[7];
+
+  return {
+    field1: temp,
+    field2: humidity,
+    field3: pressure,
+    field4: co,
+    field5: light,
+    field6: windS,
+    field7: windD,
+    field8: rainR
+  }
+}

@@ -7,9 +7,9 @@ import random
 
 class weather(object):
 
-    thingsSpeakChannel = ["1274150", ""]
-    thingsSpeakKey = ["NJFP7YQNYOT9C9H4", ""]
-    stationName = ["York St John Campus", ""]
+    thingsSpeakChannel = ["", ""]
+    thingsSpeakKey = ["", ""]
+    stationName = ["York St John Campus", "Sports Field"]
     
     #Translating degrees to cardinal directions
     def getWindDir(windDegree):
@@ -36,7 +36,7 @@ class weather(object):
         
         #weatherData: 0 = Temp, 1 = Humidity, 2 = Pressure, 3 = Light, 4 = CarbonM, 5 = Wind Speed, 6 = Wind Direction, 7 = Rain
         #Conditions: Sunny, Cloudy, Rainy, Windy
-        if int(weatherData[0]["rain"]) > 0:
+        if int(weatherData[0]["rain"]) > 5:
             return "Rainy"
         elif int(weatherData[0]["windS"]) > 20:
             return "Windy"

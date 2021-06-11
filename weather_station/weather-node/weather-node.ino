@@ -58,6 +58,7 @@ long lastSecond;
 
 byte minutes;
 byte seconds;
+
 long lastWindCheck = 0;
 volatile long lastWindIRQ = 0;
 volatile byte windClicks = 0;
@@ -113,16 +114,16 @@ void rainIRQ()
 // Count rain gauge bucket tips as they occur
 // Activated by the magnet and reed switch in the rain gauge, attached to input D2
 {
-  raintime = millis(); // grab current time
-  raininterval = raintime - rainlast; // calculate interval between this and last event
+    raintime = millis(); // grab current time
+    raininterval = raintime - rainlast; // calculate interval between this and last event
 
     if (raininterval > 10) // ignore switch-bounce glitches less than 10mS after initial edge
-  {
-    dailyrainin += 0.011; //Each dump is 0.011" of water
-    rainHour[minutes] += 0.011; //Increase this minute's amount of rain
+    {
+        dailyrainin += 0.011; //Each dump is 0.011" of water
+        rainHour[minutes] += 0.011; //Increase this minute's amount of rain
 
-    rainlast = raintime; // set up for next event
-  }
+        rainlast = raintime; // set up for next event
+    }
 }
 
 
@@ -142,13 +143,16 @@ void dataUpdate(){
     windspeedmph = currentSpeed;
     int currentDirection = get_wind_direction();
     winddir = get_wind_direction(); 
+    //Calculate amount of rainfall for the last 60 minutes
+    rainin = 0;
+    for(int i = 0 ; i < 60 ; i++)
+        rainin += rainHour[i];
     MQ135.update();   
     float humidity = myHumidity.getRH();
     float CO = get_CO();
     float temp_h = (myHumidity.readTempF() - 32) * 5/9;
     float pressure = myPressure.readPressure() / 1000;
     float light_lvl = get_light_level() * 100;
-    float Alcohol = get_Alcohol();
 
     mydata [0] = temp_h;
     mydata [1] = humidity;
@@ -266,7 +270,7 @@ void setup() {
     lastSecond = millis();
     
     // attach external interrupt pins to IRQ functions
-    attachInterrupt(0, rainIRQ, FALLING);
+    attachInterrupt(0, rainIRQ, CHANGE);
     attachInterrupt(1, wspeedIRQ, FALLING);
     // turn on interrupts
     interrupts();
@@ -338,6 +342,7 @@ void setup() {
 
 void loop() {
     os_runloop_once();
+    
 }
 
 //Returns the instataneous wind speed
